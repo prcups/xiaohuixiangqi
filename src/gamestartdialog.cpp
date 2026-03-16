@@ -1,5 +1,6 @@
 #include "gamestartdialog.h"
 #include "ui_gamestartdialog.h"
+#include <QCoreApplication>
 
 GameStartDialog::GameStartDialog()
     : m_ui(new Ui::GameStartDialog), v(new QIntValidator(1, 50, this)),
@@ -13,6 +14,16 @@ GameStartDialog::GameStartDialog()
 
     QSettings settings;
     engineList = settings.value("list").toJsonArray();
+    
+    if (engineList.isEmpty()) {
+        QJsonObject eleeyeEngine;
+        eleeyeEngine["name"] = "EleEye";
+        eleeyeEngine["path"] = QCoreApplication::applicationDirPath() + "/eleeye";
+        eleeyeEngine["protocol"] = UCCI;
+        engineList.append(eleeyeEngine);
+        settings.setValue("list", engineList);
+    }
+    
     QString name;
     for (auto i : engineList) {
         name = i.toObject()["name"].toString();
