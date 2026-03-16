@@ -212,8 +212,8 @@ void UCIEngine::handleOutput()
             if (output.isEmpty()) break;
             log() << (this->playerColor == Red ? QString("Red: ") : QString("Black: "))
                   << output;
-            if (output.leftRef(8) == "bestmove") {
-                auto bestmoveList = output.splitRef(QRegExp("[ \n]"));
+            if (output.left(8) == "bestmove") {
+                auto bestmoveList = output.split(QRegularExpression("[ \n]"));
                 if (bestmoveList.size() > 1) {
                     if (bestmoveList[1] == "(none)") {
                         board->Resign();
@@ -226,7 +226,7 @@ void UCIEngine::handleOutput()
                             return;
                         }
                     }
-                    handleShortMoveString(bestmoveList[1].toString());
+                    handleShortMoveString(bestmoveList[1]);
                 }
                 status = EnginePrepared;
                 break;
@@ -339,12 +339,12 @@ void UCCIEngine::handleOutput()
             if (output.isEmpty()) break;
             log() << (this->playerColor == Red ? QString("Red: ") : QString("Black: "))
                   << output;
-            if (output.leftRef(10) == "nobestmove") {
+            if (output.left(10) == "nobestmove") {
                 board->Resign();
                 return;
             }
-            if (output.leftRef(8) == "bestmove") {
-                auto bestmoveList = output.splitRef(QRegExp("[ \n]"));
+            if (output.left(8) == "bestmove") {
+                auto bestmoveList = output.split(QRegularExpression("[ \n]"));
                 if (bestmoveList.size() > 1) {
                     for (int i = 0; i < bestmoveList.size(); ++i) {
                         if (bestmoveList[i] == "draw" && board->RequestDraw()) return;
@@ -353,7 +353,7 @@ void UCCIEngine::handleOutput()
                             return;
                         }
                     }
-                    handleShortMoveString(bestmoveList[1].toString());
+                    handleShortMoveString(bestmoveList[1]);
                 }
                 status = EnginePrepared;
                 break;

@@ -17,10 +17,10 @@ bool Record::operator == (const Record &x)const
 QString Record::ToMoveString()
 {
     QString s;
-    s.append('a' + fromY);
-    s.append('0' + fromX);
-    s.append('a' + toY);
-    s.append('0' + toX);
+    s.append(QChar('a' + fromY));
+    s.append(QChar('0' + fromX));
+    s.append(QChar('a' + toY));
+    s.append(QChar('0' + toX));
     return s;
 }
 

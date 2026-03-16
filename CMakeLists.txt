@@ -10,9 +10,9 @@ set(CMAKE_AUTOUIC ON)
 set (CMAKE_CXX_STANDARD 20)
 
 # Find the QtWidgets library
-find_package(Qt5Widgets CONFIG REQUIRED)
+find_package(Qt6 COMPONENTS Widgets REQUIRED)
 
-qt_add_resources(QRC_FILES assets/assets.qrc)
+qt6_add_resources(QRC_FILES assets/assets.qrc)
 
 set(xiaohuixiangqi_SRC
   src/main.cpp
@@ -30,8 +30,8 @@ set(xiaohuixiangqi_SRC
 # Tell CMake to create the helloworld executable
 add_executable(xiaohuixiangqi ${xiaohuixiangqi_SRC})
 
-# Use the Widgets module from Qt 5.
-target_link_libraries(xiaohuixiangqi Qt5::Widgets)
+# Use the Widgets module from Qt 6.
+target_link_libraries(xiaohuixiangqi Qt6::Widgets)
 
 # Install the executable
 install(TARGETS xiaohuixiangqi DESTINATION bin)

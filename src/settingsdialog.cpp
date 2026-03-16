@@ -24,8 +24,8 @@ SettingsDialog::SettingsDialog()
     connect(m_ui->buttonBox->button(QDialogButtonBox::Apply),
             &QPushButton::clicked, this, &SettingsDialog::onApplyTriggered);
     connect(this, &SettingsDialog::accepted, this, &SettingsDialog::onApplyTriggered);
-    connect(m_ui->rotate, &QCheckBox::stateChanged, this, &SettingsDialog::onApplyEnabled);
-    connect(m_ui->animation, &QCheckBox::stateChanged, this, &SettingsDialog::onApplyEnabled);
+    connect(m_ui->rotate, &QCheckBox::checkStateChanged, this, &SettingsDialog::onApplyEnabled);
+    connect(m_ui->animation, &QCheckBox::checkStateChanged, this, &SettingsDialog::onApplyEnabled);
 }
 
 SettingsDialog::~SettingsDialog() {}

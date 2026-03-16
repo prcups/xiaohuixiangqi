@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QProcess>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QTimer>
 #include "piece.h"
 #include "log.h"
