@@ -2,9 +2,14 @@
 #include "ui_gamestartdialog.h"
 
 GameStartDialog::GameStartDialog()
-    : m_ui(new Ui::GameStartDialog), v(new QIntValidator(1, 50, this))
+    : m_ui(new Ui::GameStartDialog), v(new QIntValidator(1, 50, this)),
+      timeValidator(new QIntValidator(0, 9999, this))
 {
     m_ui->setupUi(this);
+    m_ui->RedStepTime->setValidator(timeValidator.get());
+    m_ui->RedTotalTime->setValidator(timeValidator.get());
+    m_ui->BlackStepTime->setValidator(timeValidator.get());
+    m_ui->BlackTotalTime->setValidator(timeValidator.get());
 
     QSettings settings;
     engineList = settings.value("list").toJsonArray();
@@ -51,6 +56,21 @@ EngineType GameStartDialog::GetEngineType(int index)
         .path = engineList[index - 1].toObject()["path"].toString(),
         .protocol = EngineProtocol(engineList[index - 1].toObject()["protocol"].toInt())
     };
+}
+
+TimeSettings GameStartDialog::GetTimeSettings(PieceColor color)
+{
+    if (color == Red) {
+        return TimeSettings{
+            .stepTime = m_ui->RedStepTime->text().toInt(),
+            .totalTime = m_ui->RedTotalTime->text().toInt()
+        };
+    } else {
+        return TimeSettings{
+            .stepTime = m_ui->BlackStepTime->text().toInt(),
+            .totalTime = m_ui->BlackTotalTime->text().toInt()
+        };
+    }
 }
 
 void GameStartDialog::handleRedPlayerChanged(int index)

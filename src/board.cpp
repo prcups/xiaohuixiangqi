@@ -319,6 +319,7 @@ float Board::yToPosX(int xPos)
 void Board::prepareNextMove()
 {
     draw = 0;
+    player[curPlayerColor]->MoveCompleted();
     curPlayerColor ^= 1;
     bar() << tr("就绪");
     Start();
@@ -520,6 +521,11 @@ bool Board::Move(int fromX, int fromY, int toX, int toY)
 Player *Board::GetCurPlayer()
 {
     return player[curPlayerColor];
+}
+
+Player *Board::GetRivalPlayer()
+{
+    return player[curPlayerColor ^ 1];
 }
 
 bool Board::judgeMove(int fromX, int fromY, int toX, int toY)
@@ -984,15 +990,20 @@ void Board::doPause()
 
 void Board::ChangePaused()
 {
-    if (!isPaused) doPause();
-    else isPaused = false;
+    if (!isPaused) {
+        doPause();
+    } else {
+        isPaused = false;
+        player[curPlayerColor]->ResumeTimer();
+    }
     Start();
 }
 
 void Board::Undo()
 {
     doPause();
-
+    player[0]->ClearTimeLimits();
+    player[1]->ClearTimeLimits();
     switchToMove(movePos - 1);
     Start();
 }
@@ -1000,6 +1011,8 @@ void Board::Undo()
 void Board::Redo()
 {
     doPause();
+    player[0]->ClearTimeLimits();
+    player[1]->ClearTimeLimits();
     switchToMove(movePos + 1);
     Start();
 }
@@ -1008,6 +1021,8 @@ void Board::handleAbnormalEnd(EndType type)
 {
     status = BoardBanned;
     if (focusFrame.scene() == this) removeItem(&focusFrame);
+    player[0]->ClearTimeLimits();
+    player[1]->ClearTimeLimits();
     ++movePos;
     Record record = {
         .type = EndResign,

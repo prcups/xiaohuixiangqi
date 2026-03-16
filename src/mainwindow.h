@@ -11,6 +11,8 @@
 #include <QStatusBar>
 #include <QLabel>
 #include <QTransform>
+#include <QVBoxLayout>
+#include <QGroupBox>
 
 #include "board.h"
 #include "gamestartdialog.h"
@@ -36,11 +38,32 @@ public slots:
     void onLogReceived(const QString & str);
 };
 
+class TimePanel : public QDockWidget
+{
+    Q_OBJECT
+
+    QWidget *widget;
+    QLabel *redStepLabel;
+    QLabel *redTotalLabel;
+    QLabel *blackStepLabel;
+    QLabel *blackTotalLabel;
+    QPointer <Player> player[2];
+    QPointer <Board> board;
+    QTimer *updateTimer;
+public:
+    TimePanel();
+    void SetPlayers(Player *red, Player *black, Board *gameBoard);
+    void UpdateTime();
+public slots:
+    void handleBoardInfoChanged(const BoardInfo &info);
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
     LogWindow logWindow;
+    TimePanel timePanel;
     QPointer <Board> board;
     QPointer <Player> player[2];
     BoardView boardView;

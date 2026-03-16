@@ -9,6 +9,7 @@
 #include <QJsonObject>
 #include <QSettings>
 #include "piece.h"
+#include "player.h"
 
 namespace Ui
 {
@@ -37,10 +38,12 @@ public:
     int GetPlayerDiffSelection(PieceColor color);
     int GetPlayerDepthSelection(PieceColor color);
     EngineType GetEngineType(int index);
+    TimeSettings GetTimeSettings(PieceColor color);
 
 private:
     QScopedPointer<Ui::GameStartDialog> m_ui;
     QScopedPointer<QIntValidator> v;
+    QScopedPointer<QIntValidator> timeValidator;
     QJsonArray engineList;
 
 public slots:

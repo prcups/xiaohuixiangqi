@@ -33,12 +33,102 @@ void LogWindow::onLogReceived(const QString &str)
     edit->ensureCursorVisible();
 }
 
+TimePanel::TimePanel()
+{
+    widget = new QWidget();
+    auto layout = new QVBoxLayout();
+    
+    auto redGroup = new QGroupBox(tr("红方"));
+    auto redLayout = new QVBoxLayout();
+    redStepLabel = new QLabel(tr("单步：--"));
+    redTotalLabel = new QLabel(tr("全局：--"));
+    redLayout->addWidget(redStepLabel);
+    redLayout->addWidget(redTotalLabel);
+    redGroup->setLayout(redLayout);
+    
+    auto blackGroup = new QGroupBox(tr("黑方"));
+    auto blackLayout = new QVBoxLayout();
+    blackStepLabel = new QLabel(tr("单步：--"));
+    blackTotalLabel = new QLabel(tr("全局：--"));
+    blackLayout->addWidget(blackStepLabel);
+    blackLayout->addWidget(blackTotalLabel);
+    blackGroup->setLayout(blackLayout);
+    
+    layout->addWidget(redGroup);
+    layout->addWidget(blackGroup);
+    layout->addStretch();
+    
+    widget->setLayout(layout);
+    setWidget(widget);
+    setWindowTitle(tr("计时"));
+    setAllowedAreas(Qt::RightDockWidgetArea);
+    setFeatures(QDockWidget::NoDockWidgetFeatures);
+    
+    updateTimer = new QTimer(this);
+    updateTimer->setInterval(1000);
+    connect(updateTimer, &QTimer::timeout, this, &TimePanel::UpdateTime);
+}
+
+void TimePanel::SetPlayers(Player *red, Player *black, Board *gameBoard)
+{
+    player[0] = red;
+    player[1] = black;
+    board = gameBoard;
+    connect(board, &Board::BoardInfoChanged, this, &TimePanel::handleBoardInfoChanged);
+}
+
+void TimePanel::UpdateTime()
+{
+    if (player[0] && player[1]) {
+        int redStep = player[0]->GetRemainingStepTime();
+        int redTotal = player[0]->GetRemainingTotalTime();
+        int blackStep = player[1]->GetRemainingStepTime();
+        int blackTotal = player[1]->GetRemainingTotalTime();
+        
+        if (redStep >= 0)
+            redStepLabel->setText(tr("单步：%1").arg(redStep));
+        else
+            redStepLabel->setText(tr("单步：--"));
+        
+        if (redTotal > 0)
+            redTotalLabel->setText(tr("全局：%1").arg(redTotal));
+        else
+            redTotalLabel->setText(tr("全局：--"));
+        
+        if (blackStep >= 0)
+            blackStepLabel->setText(tr("单步：%1").arg(blackStep));
+        else
+            blackStepLabel->setText(tr("单步：--"));
+        
+        if (blackTotal > 0)
+            blackTotalLabel->setText(tr("全局：%1").arg(blackTotal));
+        else
+            blackTotalLabel->setText(tr("全局：--"));
+    }
+}
+
+void TimePanel::handleBoardInfoChanged(const BoardInfo &info)
+{
+    if (info.endType != NotEnd || info.isPaused) {
+        updateTimer->stop();
+    } else {
+        int curPlayerIdx = info.isBlack ? 1 : 0;
+        if (player[curPlayerIdx] && player[curPlayerIdx]->GetRemainingStepTime() >= 0) {
+            updateTimer->start();
+        } else {
+            updateTimer->stop();
+        }
+    }
+    UpdateTime();
+}
+
 MainWindow::MainWindow()
 {
     setWindowTitle(tr("小卉象棋"));
     setWindowIcon(QIcon(":/xiaohuixiangqi.png"));
 
     addDockWidget(Qt::LeftDockWidgetArea, &logWindow);
+    addDockWidget(Qt::RightDockWidgetArea, &timePanel);
     connect(&log(), &Log::NewLogOutput, &logWindow, &LogWindow::onLogReceived);
     connect(&bar(), &Log::NewLogOutput, this, &MainWindow::onStatusUpdated);
     connect(&dialog(), &Log::NewLogOutput, this, &MainWindow::onDialogWanted);
@@ -119,6 +209,7 @@ void MainWindow::onCreateTriggered()
             else
                 player[i] = new UCCIEngine(PieceColor(i), type.path, depth);
         }
+        player[i]->SetTimeSettings(gameStartDialog.GetTimeSettings(PieceColor(i)));
     }
 
     logWindow.clear();
@@ -131,6 +222,7 @@ void MainWindow::onCreateTriggered()
     boardView.setScene(newBoard);
     delete board;
     board = newBoard;
+    timePanel.SetPlayers(player[0], player[1], board);
     connect(board, &Board::BoardInfoChanged, this, &MainWindow::onBoardInfoChanged);
 
     if (player[0]->GetType() == Computer && player[1]->GetType() == Human) {

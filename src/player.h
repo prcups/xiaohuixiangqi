@@ -4,8 +4,15 @@
 #include <QObject>
 #include <QProcess>
 #include <QRegExp>
+#include <QTimer>
 #include "piece.h"
 #include "log.h"
+
+struct TimeSettings
+{
+    int stepTime;
+    int totalTime;
+};
 
 enum PlayerType
 {
@@ -30,6 +37,15 @@ protected:
     PieceColor playerColor;
     Board *board = nullptr;
     PlayerType type;
+    int stepTimeLimit;
+    int totalTimeLimit;
+    int remainingTotalTime;
+    int remainingStepTime;
+    QTimer *stepTimer;
+
+protected slots:
+    void onStepTimeout();
+
 public:
     virtual ~Player();
 
@@ -42,6 +58,14 @@ public:
     PlayerType GetType();
     virtual void Go();
     virtual void Pause();
+    void SetTimeSettings(const TimeSettings &settings);
+    int GetRemainingTotalTime() const;
+    int GetRemainingStepTime() const;
+    int GetRemainingStepTimeLimit() const;
+    int GetRemainingTotalTimeLimit() const;
+    void MoveCompleted();
+    void ResumeTimer();
+    void ClearTimeLimits();
     Piece *JiangPtr;
 };
 

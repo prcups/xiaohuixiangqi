@@ -126,6 +126,7 @@ public:
     void Start();
     void Rotate(bool ok);
     Player* GetCurPlayer();
+    Player* GetRivalPlayer();
     void SetMovable(bool allowMove);
     Piece* GetPiece(int x, int y);
     bool Move(int fromX, int fromY, int toX, int toY);

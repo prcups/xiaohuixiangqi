@@ -1,10 +1,20 @@
 #include "board.h"
 #include "player.h"
+#include <algorithm>
 
-Player::~Player() = default;
+Player::~Player()
+{
+    delete stepTimer;
+}
 
 Player::Player(PieceColor color)
-    : playerColor(color), type(Human) {}
+    : playerColor(color), type(Human),
+      stepTimeLimit(0), totalTimeLimit(0), remainingTotalTime(0), remainingStepTime(0)
+{
+    stepTimer = new QTimer(this);
+    stepTimer->setInterval(1);
+    connect(stepTimer, &QTimer::timeout, this, &Player::onStepTimeout);
+}
 
 void Player::Go()
 {
@@ -12,6 +22,10 @@ void Player::Go()
     if (board->GetDraw())
         bar() << tr("对方求和，如同意请点击求和/接受求和选项");
     board->SetMovable(true);
+    if (stepTimeLimit > 0) {
+        remainingStepTime = stepTimeLimit;
+        stepTimer->start();
+    }
 }
 
 PieceColor Player::GetColor()
@@ -27,11 +41,87 @@ PlayerType Player::GetType()
 void Player::Pause()
 {
     board->SetMovable(false);
+    stepTimer->stop();
 }
 
 void Player::SetBoard(Board *newBoard)
 {
     board = newBoard;
+}
+
+void Player::SetTimeSettings(const TimeSettings &settings)
+{
+    stepTimeLimit = settings.stepTime * 1000;
+    totalTimeLimit = settings.totalTime * 1000;
+    remainingTotalTime = settings.totalTime * 1000;
+}
+
+int Player::GetRemainingTotalTime() const
+{
+    if (totalTimeLimit <= 0) return 0;
+    return remainingTotalTime / 1000;
+}
+
+int Player::GetRemainingStepTime() const
+{
+    if (stepTimeLimit <= 0) return -1;
+    if (!stepTimer->isActive()) {
+        if (board->GetCurPlayer() == this) return stepTimeLimit / 1000;
+        return -1;
+    }
+    return remainingStepTime / 1000;
+}
+
+int Player::GetRemainingStepTimeLimit() const
+{
+    return stepTimeLimit;
+}
+
+int Player::GetRemainingTotalTimeLimit() const
+{
+    return totalTimeLimit;
+}
+
+void Player::MoveCompleted()
+{
+    stepTimer->stop();
+}
+
+void Player::ResumeTimer()
+{
+    if (stepTimeLimit > 0 && remainingStepTime > 0) {
+        stepTimer->start();
+    }
+}
+
+void Player::ClearTimeLimits()
+{
+    stepTimeLimit = 0;
+    totalTimeLimit = 0;
+    stepTimer->stop();
+}
+
+void Player::onStepTimeout()
+{
+    if (remainingStepTime > 0) {
+        --remainingStepTime;
+        if (totalTimeLimit > 0 && remainingTotalTime > 0) {
+            --remainingTotalTime;
+        }
+    }
+    
+    if (remainingStepTime <= 0) {
+        stepTimer->stop();
+        bar() << (playerColor == Red ? tr("红方") : tr("黑方")) + tr("超时判负");
+        if (board) board->Resign();
+        return;
+    }
+    
+    if (totalTimeLimit > 0 && remainingTotalTime <= 0) {
+        stepTimer->stop();
+        bar() << (playerColor == Red ? tr("红方") : tr("黑方")) + tr("超时判负");
+        if (board) board->Resign();
+    }
 }
 
 UCIEngine::UCIEngine(PieceColor color, QString enginePath, int depth)
@@ -65,8 +155,24 @@ void UCIEngine::Go()
     output.append("\ngo depth ");
     output.append(QString::number(depth));
     if (board->GetDraw()) output.append(" draw");
+    if (stepTimeLimit > 0) {
+        output.append(" movetime ");
+        output.append(QString::number(stepTimeLimit));
+    }
+    if (totalTimeLimit > 0) {
+        output.append(playerColor == Red ? " wtime " : " btime ");
+        output.append(QString::number(remainingTotalTime));
+    }
+    if (board->GetRivalPlayer()->GetRemainingTotalTimeLimit() > 0) {
+        output.append(playerColor == Red ? " btime " : " wtime ");
+        output.append(QString::number(board->GetRivalPlayer()->GetRemainingTotalTime()));
+    }
     output.append("\n");
     engineProcess->write(output.toLocal8Bit());
+    if (stepTimeLimit > 0) {
+        remainingStepTime = stepTimeLimit;
+        stepTimer->start();
+    }
 }
 
 void UCIEngine::Pause()
@@ -174,8 +280,26 @@ void UCCIEngine::Go()
     output.append("\ngo depth ");
     output.append(QString::number(depth));
     if (board->GetDraw()) output.append(" draw");
+    if (stepTimeLimit > 0 || totalTimeLimit > 0) {
+        output.append(" time ");
+        output.append(QString::number(stepTimeLimit < remainingTotalTime
+                                            ? stepTimeLimit : remainingTotalTime));
+    }
+    auto rivalPlayer = board->GetRivalPlayer();
+    if (rivalPlayer->GetRemainingTotalTimeLimit() > 0
+        || rivalPlayer->GetRemainingStepTimeLimit() > 0
+    ) {
+        output.append(" opptime ");
+        output.append(QString::number(rivalPlayer->GetRemainingStepTimeLimit()
+            < rivalPlayer->GetRemainingTotalTime() ? rivalPlayer->GetRemainingStepTimeLimit()
+            : rivalPlayer->GetRemainingTotalTime()));
+    }
     output.append("\n");
     engineProcess->write(output.toLocal8Bit());
+    if (stepTimeLimit > 0) {
+        remainingStepTime = stepTimeLimit;
+        stepTimer->start();
+    }
 }
 
 void UCCIEngine::Pause()
