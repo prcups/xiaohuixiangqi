@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(xiaohuixiangqi VERSION 0.1.1)
+project(xiaohuixiangqi VERSION 0.2.0)
 
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
