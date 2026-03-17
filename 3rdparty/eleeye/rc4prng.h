@@ -1,8 +1,8 @@
-#include "base.h"
-#include "x86asm.h"
-
 #ifndef RC4PRNG_H
 #define RC4PRNG_H
+
+#include "base.h"
+#include "x86asm.h"
 
 struct RC4Struct {
   uint8_t s[256];
@@ -31,11 +31,7 @@ struct RC4Struct {
       uint32_t dw[2];
       uint64_t qw;
     } Seed;
-#if defined __arm__ || defined __aarch64__ || defined __mips__
     Seed.qw = 0;
-#else
-    Seed.qw = TimeStampCounter();
-#endif
     Seed.dw[1] ^= (uint32_t) GetTime();
     Init(&Seed, 8);
   }
