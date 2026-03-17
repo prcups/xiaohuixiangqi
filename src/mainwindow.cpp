@@ -16,7 +16,6 @@ LogWindow::LogWindow(): edit(new QPlainTextEdit)
     edit->setMaximumBlockCount(200);
     setVisible(false);
     setWindowTitle(tr("日志"));
-    setAllowedAreas(Qt::LeftDockWidgetArea);
     setFeatures(QDockWidget::DockWidgetClosable);
     edit->setReadOnly(true);
     setWidget(edit.get());
@@ -37,7 +36,7 @@ TimePanel::TimePanel()
 {
     widget = new QWidget();
     auto layout = new QVBoxLayout();
-    
+
     auto redGroup = new QGroupBox(tr("红方"));
     auto redLayout = new QVBoxLayout();
     redStepLabel = new QLabel(tr("单步：--"));
@@ -61,7 +60,7 @@ TimePanel::TimePanel()
     widget->setLayout(layout);
     setWidget(widget);
     setWindowTitle(tr("计时"));
-    setAllowedAreas(Qt::RightDockWidgetArea);
+
     setFeatures(QDockWidget::NoDockWidgetFeatures);
     
     updateTimer = new QTimer(this);
@@ -127,7 +126,7 @@ MainWindow::MainWindow()
     setWindowTitle(tr("小卉象棋"));
     setWindowIcon(QIcon(":/xiaohuixiangqi.png"));
 
-    addDockWidget(Qt::LeftDockWidgetArea, &logWindow);
+    addDockWidget(Qt::RightDockWidgetArea, &logWindow);
     addDockWidget(Qt::RightDockWidgetArea, &timePanel);
     connect(&log(), &Log::NewLogOutput, &logWindow, &LogWindow::onLogReceived);
     connect(&bar(), &Log::NewLogOutput, this, &MainWindow::onStatusUpdated);
